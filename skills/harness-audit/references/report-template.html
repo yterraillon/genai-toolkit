@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Audit</title>
+<!--
+  Gabarit du rapport harness-audit.
+  - Remplacer chaque {{PLACEHOLDER}} et dupliquer les lignes d'exemple suivies du commentaire « répéter ».
+  - Le contenu doit être identique au rapport .md.
+  - Badges : class="badge ok" (PRÉSENT), "partial" (PARTIEL), "ko" (ABSENT), "na" (N/A), "unk" (NON VÉRIFIABLE).
+  - Niveaux de maturité : class="level l0" … "l3".
+  - Fichier autonome : ne pas ajouter de CSS, police ou script externe.
+-->
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f6f7f9; --text: #1b1f24; --muted: #5b6470; --border: #d9dde3;
+    --ok: #1a7f37; --ok-bg: #dafbe1; --partial: #9a6700; --partial-bg: #fff4d4;
+    --ko: #cf222e; --ko-bg: #ffe5e7; --na: #57606a; --na-bg: #eaeef2; --unk: #6639ba; --unk-bg: #f1e8ff;
+    --accent: #0969da;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --surface: #161b22; --text: #e6edf3; --muted: #8d96a0; --border: #30363d;
+      --ok: #3fb950; --ok-bg: #12361f; --partial: #d29922; --partial-bg: #3a2c0a;
+      --ko: #f85149; --ko-bg: #3d1417; --na: #8d96a0; --na-bg: #21262d; --unk: #a371f7; --unk-bg: #2a1f43;
+      --accent: #4493f8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --surface: #161b22; --text: #e6edf3; --muted: #8d96a0; --border: #30363d;
+    --ok: #3fb950; --ok-bg: #12361f; --partial: #d29922; --partial-bg: #3a2c0a;
+    --ko: #f85149; --ko-bg: #3d1417; --na: #8d96a0; --na-bg: #21262d; --unk: #a371f7; --unk-bg: #2a1f43;
+    --accent: #4493f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+  .summary ul { margin: 0; padding-left: 20px; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .matrix td, .matrix th { text-align: center; }
+  .matrix td:first-child, .matrix th:first-child { text-align: left; position: sticky; left: 0; background: var(--bg); }
+  .matrix th:first-child { background: var(--surface); }
+  code { font: .85em ui-monospace, SFMono-Regular, Consolas, monospace; background: var(--surface); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+  .badge.ok { color: var(--ok); background: var(--ok-bg); }
+  .badge.partial { color: var(--partial); background: var(--partial-bg); }
+  .badge.ko { color: var(--ko); background: var(--ko-bg); }
+  .badge.na { color: var(--na); background: var(--na-bg); }
+  .badge.unk { color: var(--unk); background: var(--unk-bg); }
+  .level { display: inline-flex; gap: 3px; vertical-align: middle; }
+  .level i { width: 14px; height: 8px; border-radius: 2px; background: var(--na-bg); }
+  .level.l1 i:nth-child(-n+1), .level.l2 i:nth-child(-n+2), .level.l3 i:nth-child(-n+3) { background: var(--accent); }
+  .level + span { margin-left: 6px; font-weight: 600; }
+  .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .actions section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .actions h3 { margin-top: 0; }
+  .legend { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Harness Audit — {{NOM_DU_REPO}}</h1>
+  <div class="meta">{{DATE}} · branche <code>{{BRANCHE}}</code> · commit <code>{{COMMIT_COURT}}</code></div>
+</header>
+
+<h2>1. Résumé</h2>
+<div class="summary">
+  <ul>
+    <li>{{LIGNE_RESUME}}</li><!-- répéter, 5 lignes max -->
+  </ul>
+</div>
+
+<h2>2. Maturité par axe</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Axe</th><th>Niveau</th><th>Commentaire</th></tr></thead>
+  <tbody>
+    <!-- répéter pour A à I -->
+    <tr><td>A. Feedforward — documentation</td><td><span class="level l2"><i></i><i></i><i></i></span><span>2</span></td><td>{{COMMENTAIRE}}</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="legend">0 absent · 1 présent mais pas branché · 2 branché en local ou en CI · 3 bloquant en CI et documenté</p>
+
+<h2>3. Composants détectés</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Composant</th><th>Chemin</th><th>Type</th><th>Stack</th></tr></thead>
+  <tbody>
+    <tr><td>{{COMPOSANT}}</td><td><code>{{CHEMIN}}</code></td><td>{{TYPE}}</td><td>{{STACK}}</td></tr><!-- répéter -->
+  </tbody>
+</table>
+</div>
+
+<h2>4. Matrice composants × sensors</h2>
+<div class="table-wrap">
+<table class="matrix">
+  <thead>
+    <tr><th>Composant</th><th>Lint</th><th>Statique</th><th>TU</th><th>Smoke</th><th>Fonctionnel</th><th>Contract</th><th>Intégration</th><th>Infra / Mobile</th></tr>
+  </thead>
+  <tbody>
+    <!-- répéter par composant -->
+    <tr><td>{{COMPOSANT}}</td><td><span class="badge ok">PRÉSENT</span></td><td><span class="badge partial">PARTIEL</span></td><td><span class="badge ko">ABSENT</span></td><td><span class="badge na">N/A</span></td><td><span class="badge unk">NON VÉRIFIABLE</span></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Détail par axe</h2>
+<!-- répéter un bloc h3 + tableau par axe (A à I) -->
+<h3>A. Feedforward — documentation</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>ID</th><th>Contrôle</th><th>Statut</th><th>Preuve</th><th>Remédiation</th></tr></thead>
+  <tbody>
+    <tr><td>A1</td><td>{{CONTROLE}}</td><td><span class="badge partial">PARTIEL</span></td><td><code>{{CHEMIN:LIGNE}}</code></td><td>{{REMEDIATION}}</td></tr><!-- répéter -->
+  </tbody>
+</table>
+</div>
+
+<h2>6. Plan d'action priorisé</h2>
+<div class="actions">
+  <section><h3>Quick wins</h3><ul><li>{{ACTION}}</li></ul></section>
+  <section><h3>Moyen terme</h3><ul><li>{{ACTION}}</li></ul></section>
+  <section><h3>Structurant</h3><ul><li>{{ACTION}}</li></ul></section>
+</div>
+
+<h2>7. Limites de l'audit</h2>
+<ul>
+  <li>Audit statique : aucune commande du projet n'a été exécutée.</li>
+  <li>{{LIMITE}}</li><!-- répéter -->
+</ul>
+
+</main>
+</body>
+</html>

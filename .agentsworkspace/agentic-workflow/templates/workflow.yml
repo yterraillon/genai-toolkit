@@ -1,0 +1,59 @@
+# Configuration du workflow agentique pour ce repo.
+# À copier dans <repo>/.claude/workflow.yml. Lu par les skills /wf-* et par hooks/guard-git.ps1.
+# Référence : genai-toolkit/docs/workflow.md
+
+default_branch: main
+
+# Commandes de validation locale lancées par l'agent dev avant chaque push.
+commands:
+  build: "dotnet build"
+  test: "dotnet test"
+  lint: "dotnet format --verify-no-changes"
+
+# Plancher de risque déterministe : si un fichier modifié correspond à un glob, la PR ne peut pas être
+# classée plus bas. Le LLM et les reviewers peuvent seulement monter le niveau.
+risk_rules:
+  high:
+    - "**/Migrations/**"
+    - "**/Auth/**"
+    - ".github/workflows/**"
+  medium:
+    - "src/**"
+
+# Reviewers lancés par /wf-review selon le niveau de risque.
+# "code-reviewer:<focus>" = agent générique avec un focus (correctness | tests | security | perf).
+# Tout autre nom = agent propre au repo, défini dans <repo>/.claude/agents/<nom>.md.
+reviewers:
+  low:    ["code-reviewer:correctness"]
+  medium: ["code-reviewer:correctness", "code-reviewer:tests"]
+  high:   ["code-reviewer:correctness", "code-reviewer:security", "code-reviewer:tests"]
+  # Reviewers ajoutés quel que soit le niveau, quand un fichier modifié correspond au glob.
+  conditional:
+    "**/Migrations/**": "migration-reviewer"
+
+# Niveaux de risque pour lesquels l'architect relit le diff.
+architect_review: ["medium", "high"]
+
+# Workflows GitHub Actions de CI à surveiller sur les PR (noms tels qu'affichés par `gh run list`).
+ci:
+  workflows: ["CI"]
+  timeout_min: 30
+
+# GitHub Project v2 utilisé comme tableau de suivi.
+project:
+  owner: "@me"          # ou le nom de l'organisation
+  number: 1
+  status_field: "Status"
+  dev_column: "Dev"
+
+# Release preview : tout tourne dans GitHub Actions après le merge sur default_branch.
+# L'agent lit les runs via gh (run list / watch / view --log-failed).
+release:
+  workflows: ["Deploy preview", "Smoke tests"]
+  timeout_min: 45
+
+# Dossier gitignoré où sont générés les rapports (page HTML high risk, etc.).
+reports_dir: ".agent-reports"
+
+# Autorise l'agent dev à modifier .github/workflows/** (bloqué par le hook sinon).
+allow_workflow_edits: false

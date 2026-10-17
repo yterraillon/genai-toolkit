@@ -27,6 +27,8 @@ Analyse les fichiers impactés et le code pour attribuer un tag de risque :
   * Modifications touchant la sécurité, l'authentification, les paiements, la base de données (migrations) ou la CI/CD.
   * Suppression importante de code sans couverture de test.
 
+**Zones sensibles du repo** : si le `CLAUDE.md` liste des chemins ou zones à risque (par ex. `Migrations/`, multi-tenant, auth), un fichier modifié dans l'une d'elles fixe un **plancher** : la PR ne peut pas être classée sous le niveau indiqué. Tu peux monter au-dessus du plancher, jamais descendre en dessous. En cas de doute entre deux niveaux, prends le plus élevé.
+
 ## Étape 3 : Rédaction de la PR
 Rédige un message clair et structuré contenant :
 - **Résumé des changements** (Bullets points).
@@ -48,3 +50,8 @@ gh pr create \
   --title "..." \
   --body "..." \
   --label "risk:high"  # Remplacer par le tag approprié (low, medium, high)
+```
+
+Si le label n'existe pas encore : `gh label create "risk:high" --color B60205 --force` (`risk:medium` : `FBCA04`, `risk:low` : `C2E0C6`).
+
+Si la branche correspond à une issue, ajoute `Closes #<n>` dans la description. Une fois la PR créée, propose de lancer `/review-pr <numéro>`.

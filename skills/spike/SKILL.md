@@ -1,25 +1,14 @@
 ---
 name: spike
-description: Analyse une issue GitHub et rédige un plan d'implémentation, ou pose des questions si des infos manquent
-allowed-tools: Bash(gh:*), Read, Grep, Glob
-argument-hint: [repo] [issue-number]
+description: Lance l'agent spike sur une issue GitHub (analyse du besoin, options, risques, questions bloquantes), qui publie la spike en commentaire de l'issue
+argument-hint: [issue-number] [owner/repo optionnel]
 ---
-spike org-name/repo-name issue-number
-Tu analyses l'issue $2 du repo $1.
 
-1. Récupère l'issue : `gh issue view $2 -R $1 --json title,body,comments,labels`
-2. Explore le codebase pour identifier les fichiers et composants concernés.
-3. Évalue si l'issue contient assez d'infos pour un plan actionnable
-   (critères d'acceptation, comportement attendu, périmètre).
+Lance l'agent `spike` sur l'issue `$1` du repo `$2` (si `$2` est vide : le repo courant, `gh repo view --json nameWithOwner`).
 
-**Si l'issue est suffisamment claire :**
-- Rédige un plan d'implémentation : découpage en étapes, fichiers touchés,
-  risques, points de test.
-- Poste-le : `gh issue comment $2 -R $1 --body "..."`
-- Ajoute le label : `gh issue edit $2 -R $1 --add-label "spike-done"`
+Une fois l'agent terminé, affiche à l'utilisateur :
+- le lien du commentaire publié ;
+- la recommandation en une phrase ;
+- les questions bloquantes, s'il y en a.
 
-**Sinon :**
-- Poste un commentaire listant les questions précises et bloquantes.
-- Ajoute le label : `gh issue edit $2 -R $1 --add-label "spike-blocked"`
-
-Ne modifie AUCUN fichier du repo. Analyse et commentaires uniquement.
+S'il n'y a pas de question bloquante, propose de lancer `/implementation-plan $1`.
